@@ -64,21 +64,31 @@ class ReporteController extends Controller
 
     /**
      * Reporte financiero general.
+     * Usa strftime para compatibilidad con SQLite y MySQL.
      */
     public function financiero(Request $request)
     {
         $anio = $request->get('anio', now()->year);
 
         $meses = collect(range(1, 12))->map(function ($mes) use ($anio) {
+            $mesStr = str_pad($mes, 2, '0', STR_PAD_LEFT);
+
             return [
-                'mes'      => $mes,
-                'nombre'   => now()->setMonth($mes)->translatedFormat('F'),
-                'pagado'   => Pago::pagados()->whereMonth('fecha', $mes)->whereYear('fecha', $anio)->sum('monto'),
-                'adeudos'  => Pago::adeudos()->whereMonth('fecha', $mes)->whereYear('fecha', $anio)->sum('monto'),
+                'mes'     => $mes,
+                'nombre'  => now()->setMonth($mes)->translatedFormat('F'),
+                'pagado'  => Pago::pagados()
+                    ->whereRaw("strftime('%m', fecha) = ?", [$mesStr])
+                    ->whereRaw("strftime('%Y', fecha) = ?", [(string) $anio])
+                    ->sum('monto'),
+                'adeudos' => Pago::adeudos()
+                    ->whereRaw("strftime('%m', fecha) = ?", [$mesStr])
+                    ->whereRaw("strftime('%Y', fecha) = ?", [(string) $anio])
+                    ->sum('monto'),
             ];
         });
 
-        $anios = Pago::selectRaw('YEAR(fecha) as anio')
+        $anios = Pago::selectRaw("strftime('%Y', fecha) as anio")
+            ->whereNotNull('fecha')
             ->distinct()
             ->orderBy('anio', 'desc')
             ->pluck('anio');
