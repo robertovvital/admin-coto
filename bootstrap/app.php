@@ -18,8 +18,8 @@ $app = Application::configure(basePath: dirname(__DIR__))
         //
     })->create();
 
-// En Vercel, redirigir storage y cache a /tmp (único dir escribible)
-if (isset($_ENV['VERCEL']) || getenv('VERCEL')) {
+// En Vercel redirigir storage y cache a /tmp
+if (!empty($_ENV['VERCEL']) || !empty(getenv('VERCEL'))) {
     $app->useStoragePath('/tmp/storage');
     $app->bootstrapPath('/tmp/bootstrap');
 }
