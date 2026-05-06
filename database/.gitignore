@@ -1,1 +1,4 @@
-*.sqlite*
+# Ignorar la base de datos local pero mantener el directorio
+*.sqlite
+*.sqlite-shm
+*.sqlite-wal
